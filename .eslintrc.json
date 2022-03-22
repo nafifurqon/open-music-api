@@ -9,6 +9,20 @@
     "ecmaVersion": "latest"
   },
   "rules": {
-    "no-console": ["error", { "allow": ["warn", "error"] }]
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "no-tabs": "off",
+    "require-jsdoc": [
+      "error",
+      {
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": false,
+          "ClassDeclaration": false,
+          "ArrowFunctionExpression": false,
+          "FunctionExpression": false
+        }
+      }
+    ],
+    "no-underscore-dangle": "off"
   }
 }
