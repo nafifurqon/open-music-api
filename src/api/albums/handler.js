@@ -43,6 +43,16 @@ class AlbumsHandler {
       return response;
     }
   }
+
+  async getAlbumsHandler() {
+    const albums = await this._service.getAlbums();
+    return {
+      status: 'success',
+      data: {
+        albums,
+      },
+    };
+  }
 }
 
 module.exports = AlbumsHandler;
