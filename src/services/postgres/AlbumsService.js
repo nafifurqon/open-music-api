@@ -35,16 +35,31 @@ class AlbumsService {
 
   async getAlbumById(id) {
     const query = {
-      text: 'SELECT * FROM albums WHERE id = $1',
+      text: 'SELECT a.id, a.name, a.year, s.id as song_id, s.title, s.performer FROM albums as a '
+      + 'JOIN songs as s on s."albumId" = a.id '
+      + 'WHERE a.id = $1',
       values: [id],
     };
+
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
       throw new NotFoundError('Album tidak ditemukan');
     }
 
-    return result.rows.map(mapDBToModel)[0];
+    const mappedResult = {
+      id: result.rows[0].id,
+      name: result.rows[0].name,
+      year: result.rows[0].year,
+    };
+
+    mappedResult.songs = result.rows.map((row) => ({
+      id: row.song_id,
+      title: row.title,
+      performer: row.performer,
+    }));
+
+    return mappedResult;
   }
 
   async editAlbumById(id, { name, year }) {
