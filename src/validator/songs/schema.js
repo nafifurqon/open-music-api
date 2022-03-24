@@ -7,7 +7,6 @@ const AlbumPayloadSchema = Joi.object({
   performer: Joi.string().required(),
   duration: Joi.number(),
   albumId: Joi.string(),
-
 });
 
 module.exports = AlbumPayloadSchema;
