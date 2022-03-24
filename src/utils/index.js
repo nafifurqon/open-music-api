@@ -1,16 +1,15 @@
 /* eslint-disable camelcase */
-const mapDBToModel = ({
-  id,
-  name,
-  year,
-  created_at,
-  updated_at,
-}) => ({
-  id,
-  name,
-  year,
-  createdAt: created_at,
-  updatedAt: updated_at,
-});
+const mapDBToModel = (payload) => {
+  const result = {
+    ...payload,
+    createdAt: payload.created_at,
+    updatedAt: payload.updated_at,
+  };
+
+  delete result.created_at;
+  delete result.updated_at;
+
+  return result;
+};
 
 module.exports = { mapDBToModel };
