@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
+const SongsService = require('./SongsService');
 
 class AlbumsService {
   constructor() {
@@ -34,12 +35,23 @@ class AlbumsService {
   }
 
   async getAlbumById(id) {
-    const query = {
+    const songsService = new SongsService();
+
+    const songs = await songsService.getSongs({ albumId: id });
+
+    const queryNotJoinSong = {
+      text: 'SELECT * FROM albums WHERE id = $1',
+      values: [id],
+    };
+
+    const queryJoinSong = {
       text: 'SELECT a.id, a.name, a.year, s.id as song_id, s.title, s.performer FROM albums as a '
       + 'JOIN songs as s on s."albumId" = a.id '
       + 'WHERE a.id = $1',
       values: [id],
     };
+
+    const query = songs.length > 0 ? queryJoinSong : queryNotJoinSong;
 
     const result = await this._pool.query(query);
 
@@ -53,11 +65,13 @@ class AlbumsService {
       year: result.rows[0].year,
     };
 
-    mappedResult.songs = result.rows.map((row) => ({
-      id: row.song_id,
-      title: row.title,
-      performer: row.performer,
-    }));
+    if (songs.length > 0) {
+      mappedResult.songs = result.rows.map((row) => ({
+        id: row.song_id,
+        title: row.title,
+        performer: row.performer,
+      }));
+    }
 
     return mappedResult;
   }
