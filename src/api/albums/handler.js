@@ -21,7 +21,7 @@ class AlbumsHandler {
 
       const response = h.response({
         status: 'success',
-        message: 'Catatan berhasil ditambahkan',
+        message: 'Album berhasil ditambahkan',
         data: {
           albumId,
         },
@@ -99,7 +99,7 @@ class AlbumsHandler {
 
       return {
         status: 'success',
-        message: 'Catatan berhasil diperbarui',
+        message: 'Album berhasil diperbarui',
       };
     } catch (error) {
       if (error instanceof ClientError) {
@@ -130,7 +130,7 @@ class AlbumsHandler {
 
       return {
         status: 'success',
-        message: 'Catatan berhasil dihapus',
+        message: 'Album berhasil dihapus',
       };
     } catch (error) {
       if (error instanceof ClientError) {
