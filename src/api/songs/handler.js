@@ -52,16 +52,26 @@ class SongsHandler {
     }
   }
 
-  async getSongsHandler(request) {
-    const { title, performer } = request.query;
+  async getSongsHandler(request, h) {
+    try {
+      const { title, performer } = request.query;
 
-    const songs = await this._service.getSongs({ title, performer });
-    return {
-      status: 'success',
-      data: {
-        songs,
-      },
-    };
+      const songs = await this._service.getSongs({ title, performer });
+      return {
+        status: 'success',
+        data: {
+          songs,
+        },
+      };
+    } catch (error) {
+      // Server ERROR!
+      const response = h.response({
+        status: 'fail',
+        message: error.message,
+      });
+      response.code(500);
+      return response;
+    }
   }
 
   async getSongByIdHandler(request, h) {
