@@ -48,14 +48,33 @@ class AlbumsHandler {
     }
   }
 
-  async getAlbumsHandler() {
-    const albums = await this._service.getAlbums();
-    return {
-      status: 'success',
-      data: {
-        albums,
-      },
-    };
+  async getAlbumsHandler(request, h) {
+    try {
+      const albums = await this._service.getAlbums();
+      return {
+        status: 'success',
+        data: {
+          albums,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: 'fail',
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
+
+      // Server ERROR!
+      const response = h.response({
+        status: 'fail',
+        message: error.message,
+      });
+      response.code(500);
+      return response;
+    }
   }
 
   async getAlbumByIdHandler(request, h) {

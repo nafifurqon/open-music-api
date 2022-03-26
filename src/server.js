@@ -3,6 +3,7 @@ require('dotenv').config();
 const Hapi = require('@hapi/hapi');
 const albums = require('./api/albums');
 const songs = require('./api/songs');
+const ClientError = require('./exceptions/ClientError');
 const AlbumsService = require('./services/postgres/AlbumsService');
 const SongsService = require('./services/postgres/SongsService');
 const AlbumsValidator = require('./validator/albums');
@@ -38,6 +39,23 @@ const init = async () => {
       },
     },
   ]);
+
+  server.ext('onPreResponse', (request, h) => {
+    const { response } = request;
+
+    // console.log('response', response)
+
+    if (response instanceof ClientError) {
+      const errorResponse = h.response({
+        status: 'fail',
+        message: response.message,
+      });
+      errorResponse.code(response.statusCode);
+      return errorResponse;
+    }
+
+    return response.continue || response;
+  });
 
   await server.start();
   console.warn(`Server berjalan pada ${server.info.uri}`);
