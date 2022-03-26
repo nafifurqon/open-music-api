@@ -43,14 +43,21 @@ const init = async () => {
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
 
-    // console.log('response', response)
-
     if (response instanceof ClientError) {
       const errorResponse = h.response({
         status: 'fail',
         message: response.message,
       });
       errorResponse.code(response.statusCode);
+      return errorResponse;
+    }
+
+    if (response instanceof ReferenceError) {
+      const errorResponse = h.response({
+        status: 'fail',
+        message: 'Maaf, terjadi kegagalan pada server kami.',
+      });
+      errorResponse.code(500);
       return errorResponse;
     }
 
