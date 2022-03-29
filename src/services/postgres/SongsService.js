@@ -53,11 +53,12 @@ class SongsService {
       }
 
       if (albumId) {
-        query += `"albumId" = '${albumId}' `;
+        query += `albumid = '${albumId}' `;
       }
     }
 
     const result = await this._pool.query(query);
+
     return result.rows.map(mapDBToModel);
   }
 

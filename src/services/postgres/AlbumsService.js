@@ -3,11 +3,11 @@ const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
-const SongsService = require('./SongsService');
 
 class AlbumsService {
-  constructor() {
+  constructor(songsService) {
     this._pool = new Pool();
+    this._songsService = songsService;
   }
 
   async addAlbum({ name, year }) {
@@ -35,9 +35,7 @@ class AlbumsService {
   }
 
   async getAlbumById(id) {
-    const songsService = new SongsService();
-
-    const songs = await songsService.getSongs({ albumId: id });
+    const songs = await this._songsService.getSongs({ albumId: id });
 
     const queryNotJoinSong = {
       text: 'SELECT * FROM albums WHERE id = $1',
@@ -46,7 +44,7 @@ class AlbumsService {
 
     const queryJoinSong = {
       text: 'SELECT a.id, a.name, a.year, s.id as song_id, s.title, s.performer FROM albums as a '
-      + 'JOIN songs as s on s."albumId" = a.id '
+      + 'JOIN songs as s on s.albumid = a.id '
       + 'WHERE a.id = $1',
       values: [id],
     };
