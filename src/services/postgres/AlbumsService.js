@@ -46,7 +46,7 @@ class AlbumsService {
 
     const queryJoinSong = {
       text: 'SELECT a.id, a.name, a.year, s.id as song_id, s.title, s.performer FROM albums as a '
-      + 'JOIN songs as s on s."albumId" = a.id '
+      + 'JOIN songs as s on s.albumid = a.id '
       + 'WHERE a.id = $1',
       values: [id],
     };
