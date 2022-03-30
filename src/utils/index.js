@@ -12,4 +12,10 @@ const mapDBToModel = (payload) => {
   return result;
 };
 
-module.exports = { mapDBToModel };
+const mappedSongs = (row) => ({
+  id: row.song_id,
+  title: row.title,
+  performer: row.performer,
+});
+
+module.exports = { mapDBToModel, mappedSongs };
