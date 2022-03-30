@@ -75,6 +75,19 @@ class PlaylistsService {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
   }
+
+  async deletePlaylist(playlistId) {
+    const query = {
+      text: 'DELETE FROM playlists WHERE id = $1 returning id',
+      values: [playlistId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) {
+      throw new NotFoundError('Playlist gagal dihapus. Id tidak ditemukan');
+    }
+  }
 }
 
 module.exports = PlaylistsService;
