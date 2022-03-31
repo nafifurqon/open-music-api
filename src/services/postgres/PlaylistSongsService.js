@@ -33,7 +33,8 @@ class PlaylistSongsService {
     + 'INNER JOIN users as u ON u.id = p.owner '
     + 'INNER JOIN playlist_songs as ps ON ps.playlist_id = p.id '
     + 'INNER JOIN songs as s ON s.id = ps.song_id '
-    + `WHERE p.id = '${playlistId}' and p.owner = '${owner}'`;
+    + 'INNER JOIN collaborations as c ON c.playlist_id = p.id '
+    + `WHERE p.id = '${playlistId}' and (p.owner = '${owner}' OR c.user_id = '${owner}')`;
 
     const result = await this._pool.query(query);
 
