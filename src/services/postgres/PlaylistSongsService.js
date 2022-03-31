@@ -33,23 +33,28 @@ class PlaylistSongsService {
     + 'INNER JOIN users as u ON u.id = p.owner '
     + 'INNER JOIN playlist_songs as ps ON ps.playlist_id = p.id '
     + 'INNER JOIN songs as s ON s.id = ps.song_id '
-    + `WHERE p.id = '${playlistId}' and p.owner = '${owner}'`;
+    + 'LEFT JOIN collaborations as c ON c.playlist_id = p.id '
+    + `WHERE p.id = '${playlistId}' and (p.owner = '${owner}' OR c.user_id = '${owner}')`;
 
     const result = await this._pool.query(query);
 
-    if (result.rows.length > 0) {
-      const mappedResult = {
-        id: result.rows[0].id,
-        name: result.rows[0].name,
-        username: result.rows[0].username,
-      };
-
-      mappedResult.songs = result.rows.map(mappedSongs);
-
-      return mappedResult;
+    if (!result.rows.length) {
+      throw new NotFoundError('Playlist lagu tidak ditemukan');
     }
 
-    return result.rows;
+    // if (result.rows.length > 0) {
+    const mappedResult = {
+      id: result.rows[0].id,
+      name: result.rows[0].name,
+      username: result.rows[0].username,
+    };
+
+    mappedResult.songs = result.rows.map(mappedSongs);
+
+    return mappedResult;
+    // }
+
+    // return result.rows;
   }
 
   async deletePlaylistSong({ playlistId, songId }) {
