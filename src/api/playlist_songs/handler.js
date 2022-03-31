@@ -1,10 +1,16 @@
 class PlaylistSongsHandler {
-  constructor(playlistsService, validator, playlistSongsService, songsService, activitiesService) {
+  constructor(
+    playlistsService,
+    validator,
+    playlistSongsService,
+    songsService,
+    playlistSongActivitiesService,
+  ) {
     this._playlistsService = playlistsService;
     this._validator = validator;
     this._playlistSongsService = playlistSongsService;
     this._songsService = songsService;
-    this._activitiesService = activitiesService;
+    this._playlistSongActivitiesService = playlistSongActivitiesService;
 
     this.postSongToPlaylistHandler = this.postSongToPlaylistHandler.bind(this);
     this.getPlaylistSongsHandler = this.getPlaylistSongsHandler.bind(this);
@@ -17,7 +23,8 @@ class PlaylistSongsHandler {
     const { id: credentialId } = request.auth.credentials;
 
     this._validator.validatePlaylistSongsPayload({
-      playlistId, songId,
+      playlistId,
+      songId,
     });
 
     await this._playlistsService.getPlaylistById(playlistId);
@@ -26,6 +33,13 @@ class PlaylistSongsHandler {
     await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
 
     await this._playlistSongsService.addPlaylistSong({ playlistId, songId });
+
+    await this._playlistSongActivitiesService.addPlaylistSongActivities({
+      playlistId,
+      songId,
+      userId: credentialId,
+      action: 'add',
+    });
 
     const response = h.response({
       status: 'success',
@@ -62,13 +76,22 @@ class PlaylistSongsHandler {
     const { id: credentialId } = request.auth.credentials;
 
     this._validator.validatePlaylistSongsPayload({
-      playlistId, songId,
+      playlistId,
+      songId,
     });
 
     await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
 
     await this._playlistSongsService.deletePlaylistSong({
-      playlistId, songId,
+      playlistId,
+      songId,
+    });
+
+    await this._playlistSongActivitiesService.addPlaylistSongActivities({
+      playlistId,
+      songId,
+      userId: credentialId,
+      action: 'delete',
     });
 
     const response = h.response({
