@@ -5,10 +5,10 @@ module.exports = {
   name: 'playlists',
   version: '1.0.0',
   register: async (server, {
-    playlistsService, validator, playlistSongsService, songsService,
+    playlistsService, validator,
   }) => {
     // eslint-disable-next-line max-len
-    const playlistsHandler = new PlaylistsHandler(playlistsService, validator, playlistSongsService, songsService);
+    const playlistsHandler = new PlaylistsHandler(playlistsService, validator);
     server.route(routes(playlistsHandler));
   },
 };
