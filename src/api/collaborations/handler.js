@@ -18,7 +18,9 @@ class CollaborationsHandler {
       const { playlistId, userId } = request.payload;
 
       await this._usersService.getUserById(userId);
-      await this._playlistsService.verifyPlaylistOwner({ playlistId, credentialId });
+      await this._playlistsService.verifyPlaylistOwner({
+        playlistId, owner: credentialId, checkCollaborator: false,
+      });
 
       // eslint-disable-next-line max-len
       const collaborationId = await this._collaborationsService.addCollaboration(playlistId, userId);
@@ -57,10 +59,13 @@ class CollaborationsHandler {
     try {
       this._validator.validateCollaborationPayload(request.payload);
       const { id: credentialId } = request.auth.credentials;
-      const { noteId, userId } = request.payload;
+      const { playlistId, userId } = request.payload;
 
-      await this._playlistsService.verifyNoteOwner(noteId, credentialId);
-      await this._collaborationsService.deleteCollaboration(noteId, userId);
+      await this._playlistsService.verifyPlaylistOwner({
+        playlistId, owner: credentialId, checkCollaborator: false,
+      });
+
+      await this._collaborationsService.deleteCollaboration(playlistId, userId);
 
       return {
         status: 'success',

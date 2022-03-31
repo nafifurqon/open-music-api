@@ -34,7 +34,7 @@ class PlaylistsService {
       text: 'SELECT playlists.id, playlists.name, users.username '
       + 'FROM playlists '
       + 'LEFT JOIN users ON users.id = playlists.owner '
-      + 'INNER JOIN collaborations as c ON c.playlist_id = playlists.id '
+      + 'LEFT JOIN collaborations as c ON c.playlist_id = playlists.id '
       + 'WHERE playlists.owner = $1 OR users.id = $1 OR c.user_id = $1',
       values: [owner],
     };
@@ -58,7 +58,7 @@ class PlaylistsService {
     return result.rows.map(mapDBToModel)[0];
   }
 
-  async verifyPlaylistOwner({ playlistId, owner, collaboratorAccess = true }) {
+  async verifyPlaylistOwner({ playlistId, owner, checkCollaborator = true }) {
     const query = {
       text: 'SELECT * FROM playlists WHERE id = $1',
       values: [playlistId],
@@ -72,12 +72,13 @@ class PlaylistsService {
 
     const playlist = result.rows[0];
 
-    if (playlist.owner !== owner && collaboratorAccess) {
-      await this.verifyPlaylistCollaborator(playlist.id, owner);
-      return true;
+    if (playlist.owner !== owner) {
+      if (checkCollaborator) {
+        await this.verifyPlaylistCollaborator(playlistId, owner);
+      } else {
+        throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+      }
     }
-
-    throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
   }
 
   async verifyPlaylistCollaborator(id, collaborator) {
@@ -91,10 +92,8 @@ class PlaylistsService {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
-      throw new NotFoundError('Anda tidak berhak mengakses resource ini verPlayCol');
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini verPlayCol');
     }
-
-    return true;
   }
 
   async deletePlaylist(playlistId) {
