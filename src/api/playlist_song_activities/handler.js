@@ -7,7 +7,7 @@ class PlaylistSongActivitiesHandler {
     this.getPlaylistSongActivitiesHandler = this.getPlaylistSongActivitiesHandler.bind(this);
   }
 
-  async getPlaylistSongActivitiesHandler(request, h) {
+  async getPlaylistSongActivitiesHandler(request) {
     const { playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
@@ -15,12 +15,10 @@ class PlaylistSongActivitiesHandler {
 
     const dataPlaylistSongActivities = await this._service.getPlaylistSongActivities(playlistId);
 
-    const response = h.response({
+    return {
       status: 'success',
       data: dataPlaylistSongActivities,
-    });
-    response.code(200);
-    return response;
+    };
   }
 }
 

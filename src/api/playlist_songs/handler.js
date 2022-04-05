@@ -51,7 +51,7 @@ class PlaylistSongsHandler {
     return response;
   }
 
-  async getPlaylistSongsHandler(request, h) {
+  async getPlaylistSongsHandler(request) {
     const { playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
@@ -62,17 +62,15 @@ class PlaylistSongsHandler {
       owner: credentialId,
     });
 
-    const response = h.response({
+    return {
       status: 'success',
       data: {
         playlist: playlistSongs,
       },
-    });
-    response.code(200);
-    return response;
+    };
   }
 
-  async deletePlaylistSongHandler(request, h) {
+  async deletePlaylistSongHandler(request) {
     const { playlistId } = request.params;
     const { songId } = request.payload;
     const { id: credentialId } = request.auth.credentials;
@@ -96,12 +94,10 @@ class PlaylistSongsHandler {
       action: 'delete',
     });
 
-    const response = h.response({
+    return {
       status: 'success',
       message: 'Lagu berhasil dihapus dari playlist',
-    });
-    response.code(200);
-    return response;
+    };
   }
 }
 

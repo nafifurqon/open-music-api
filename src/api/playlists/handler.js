@@ -27,22 +27,20 @@ class PlaylistsHandler {
     return response;
   }
 
-  async getPlaylistsHandler(request, h) {
+  async getPlaylistsHandler(request) {
     const { id: credentialId } = request.auth.credentials;
 
     const playlists = await this._playlistsService.getPlaylists(credentialId);
 
-    const response = h.response({
+    return {
       status: 'success',
       data: {
         playlists,
       },
-    });
-    response.code(200);
-    return response;
+    };
   }
 
-  async deletePlaylistHandler(request, h) {
+  async deletePlaylistHandler(request) {
     const { playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
@@ -52,12 +50,10 @@ class PlaylistsHandler {
 
     await this._playlistsService.deletePlaylist(playlistId);
 
-    const response = h.response({
+    return {
       status: 'success',
       message: 'Playlist berhasil dihapus',
-    });
-    response.code(200);
-    return response;
+    };
   }
 }
 

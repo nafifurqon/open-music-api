@@ -25,33 +25,29 @@ class UsersHandler {
     return response;
   }
 
-  async getUserByIdHandler(request, h) {
+  async getUserByIdHandler(request) {
     const { id } = request.params;
 
     const user = await this._service.getUserById(id);
 
-    const response = h.response({
+    return {
       status: 'success',
       data: {
         user,
       },
-    });
-    response.code(200);
-    return response;
+    };
   }
 
-  async getUsersByUsernameHandler(request, h) {
+  async getUsersByUsernameHandler(request) {
     const { username = '' } = request.query;
     const users = await this._service.getUsersByUsername(username);
 
-    const response = h.response({
+    return {
       status: 'success',
       data: {
         users,
       },
-    });
-    response.code(200);
-    return response;
+    };
   }
 }
 
