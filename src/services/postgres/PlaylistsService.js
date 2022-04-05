@@ -6,8 +6,9 @@ const { mapDBToModel } = require('../../utils');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor() {
+  constructor(collaborationService) {
     this._pool = new Pool();
+    this._collaborationService = collaborationService;
   }
 
   async addPlaylist({ name, owner }) {
@@ -35,7 +36,7 @@ class PlaylistsService {
       + 'FROM playlists '
       + 'LEFT JOIN users ON users.id = playlists.owner '
       + 'LEFT JOIN collaborations as c ON c.playlist_id = playlists.id '
-      + 'WHERE playlists.owner = $1 OR users.id = $1 OR c.user_id = $1',
+      + 'WHERE playlists.owner = $1 OR c.user_id = $1',
       values: [owner],
     };
 
@@ -58,7 +59,7 @@ class PlaylistsService {
     return result.rows.map(mapDBToModel)[0];
   }
 
-  async verifyPlaylistOwner({ playlistId, owner, checkCollaborator = true }) {
+  async verifyPlaylistOwner({ playlistId, owner }) {
     const query = {
       text: 'SELECT * FROM playlists WHERE id = $1',
       values: [playlistId],
@@ -73,26 +74,22 @@ class PlaylistsService {
     const playlist = result.rows[0];
 
     if (playlist.owner !== owner) {
-      if (checkCollaborator) {
-        await this.verifyPlaylistCollaborator(playlistId, owner);
-      } else {
-        throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
-      }
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
   }
 
-  async verifyPlaylistCollaborator(id, collaborator) {
-    const query = {
-      text: 'SELECT p.*, c.user_id as collaborator FROM playlists as p '
-      + 'INNER JOIN collaborations as c ON c.playlist_id = p.id '
-      + 'WHERE p.id = $1 AND c.user_id = $2',
-      values: [id, collaborator],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new AuthorizationError('Anda tidak berhak mengakses resource ini verPlayCol');
+  async verifyPlaylistAccess(playlistId, userId) {
+    try {
+      await this.verifyPlaylistOwner({ playlistId, owner: userId });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      try {
+        await this._collaborationService.verifyCollaborator(playlistId, userId);
+      } catch {
+        throw error;
+      }
     }
   }
 

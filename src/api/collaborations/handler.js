@@ -21,10 +21,10 @@ class CollaborationsHandler {
     const { playlistId, userId } = request.payload;
 
     await this._usersService.getUserById(userId);
+
     await this._playlistsService.verifyPlaylistOwner({
       playlistId,
       owner: credentialId,
-      checkCollaborator: false,
     });
 
     const collaborationId = await this._collaborationsService.addCollaboration(
@@ -51,7 +51,6 @@ class CollaborationsHandler {
     await this._playlistsService.verifyPlaylistOwner({
       playlistId,
       owner: credentialId,
-      checkCollaborator: false,
     });
 
     await this._collaborationsService.deleteCollaboration(playlistId, userId);
