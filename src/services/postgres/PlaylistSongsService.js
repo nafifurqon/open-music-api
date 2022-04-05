@@ -2,7 +2,6 @@ const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
-const { mappedSongs } = require('../../utils');
 
 class PlaylistSongsService {
   constructor() {
@@ -28,29 +27,19 @@ class PlaylistSongsService {
     return result.rows[0].id;
   }
 
-  async getPlaylistSongs({ playlistId, owner }) {
-    const query = 'SELECT p.id, p.name, u.username, s.id as song_id, s.title, s.performer FROM playlists as p '
-    + 'INNER JOIN users as u ON u.id = p.owner '
-    + 'INNER JOIN playlist_songs as ps ON ps.playlist_id = p.id '
-    + 'INNER JOIN songs as s ON s.id = ps.song_id '
-    + 'LEFT JOIN collaborations as c ON c.playlist_id = p.id '
-    + `WHERE p.id = '${playlistId}' and (p.owner = '${owner}' OR c.user_id = '${owner}')`;
+  async getPlaylistSongs({ playlistId }) {
+    const query = 'SELECT s.id, s.title, s.performer FROM playlists as p '
+    + 'LEFT JOIN playlist_songs as ps ON ps.playlist_id = p.id '
+    + 'LEFT JOIN songs as s ON s.id = ps.song_id '
+    + `WHERE p.id = '${playlistId}'`;
 
     const result = await this._pool.query(query);
 
-    if (!result.rowCount) {
-      throw new NotFoundError('Playlist lagu tidak ditemukan');
+    if (!result.rows[0].id) {
+      return [];
     }
 
-    const mappedResult = {
-      id: result.rows[0].id,
-      name: result.rows[0].name,
-      username: result.rows[0].username,
-    };
-
-    mappedResult.songs = result.rows.map(mappedSongs);
-
-    return mappedResult;
+    return result.rows;
   }
 
   async deletePlaylistSong({ playlistId, songId }) {

@@ -45,6 +45,21 @@ class PlaylistsService {
     return result.rows;
   }
 
+  async getPlaylistInfo(playlistId, owner) {
+    const query = 'SELECT p.id, p.name, u.username FROM playlists as p '
+    + 'INNER JOIN users as u ON u.id = p.owner '
+    + 'LEFT JOIN collaborations as c ON c.playlist_id = p.id '
+    + `WHERE p.id = '${playlistId}' and (p.owner = '${owner}' OR c.user_id = '${owner}')`;
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Playlist lagu tidak ditemukan');
+    }
+
+    return result.rows[0];
+  }
+
   async getPlaylistById(id) {
     const query = {
       text: 'SELECT * FROM playlists WHERE id = $1',
