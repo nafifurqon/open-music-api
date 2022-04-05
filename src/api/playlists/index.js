@@ -7,7 +7,6 @@ module.exports = {
   register: async (server, {
     playlistsService, validator,
   }) => {
-    // eslint-disable-next-line max-len
     const playlistsHandler = new PlaylistsHandler(playlistsService, validator);
     server.route(routes(playlistsHandler));
   },

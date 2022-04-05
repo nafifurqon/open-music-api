@@ -1,7 +1,3 @@
-/* eslint-disable camelcase */
-
-exports.shorthands = undefined;
-
 const now = new Date().toISOString();
 
 exports.up = (pgm) => {

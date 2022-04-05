@@ -38,7 +38,7 @@ class PlaylistSongActivities {
 
     const result = await this._pool.query(query);
 
-    if (result.rows.length > 0) {
+    if (result.rowCount > 0) {
       const mappedResult = {
         playlistId: result.rows[0].playlist_id,
       };

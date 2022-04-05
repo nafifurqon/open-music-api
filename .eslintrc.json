@@ -23,6 +23,8 @@
         }
       }
     ],
-    "no-underscore-dangle": "off"
+    "no-underscore-dangle": "off",
+    "function-paren-newline": ["error", "multiline-arguments"],
+    "operator-linebreak": ["error", "before"]
   }
 }

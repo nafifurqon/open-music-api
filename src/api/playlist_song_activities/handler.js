@@ -7,20 +7,18 @@ class PlaylistSongActivitiesHandler {
     this.getPlaylistSongActivitiesHandler = this.getPlaylistSongActivitiesHandler.bind(this);
   }
 
-  async getPlaylistSongActivitiesHandler(request, h) {
+  async getPlaylistSongActivitiesHandler(request) {
     const { playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
-    await this._playlistsService.verifyPlaylistOwner({ playlistId, owner: credentialId });
+    await this._playlistsService.verifyPlaylistAccess(playlistId, credentialId);
 
     const dataPlaylistSongActivities = await this._service.getPlaylistSongActivities(playlistId);
 
-    const response = h.response({
+    return {
       status: 'success',
       data: dataPlaylistSongActivities,
-    });
-    response.code(200);
-    return response;
+    };
   }
 }
 
