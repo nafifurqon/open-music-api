@@ -74,6 +74,21 @@ class PlaylistsService {
     return result.rows.map(mapDBToModel)[0];
   }
 
+  async checkExistsPlaylist(id) {
+    const query = {
+      text: 'SELECT 1 FROM playlists WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      return false;
+    }
+
+    return true;
+  }
+
   async verifyPlaylistOwner({ playlistId, owner }) {
     const query = {
       text: 'SELECT * FROM playlists WHERE id = $1',
