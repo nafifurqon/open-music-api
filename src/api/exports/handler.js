@@ -27,7 +27,7 @@ class ExportsHandler {
     });
 
     const message = {
-      userId: request.auth.credentials.id,
+      playlistId,
       targetEmail: request.payload.targetEmail,
     };
 
