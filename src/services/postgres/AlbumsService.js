@@ -5,9 +5,10 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
 
 class AlbumsService {
-  constructor(songsService) {
+  constructor(songsService, cacheService) {
     this._pool = new Pool();
     this._songsService = songsService;
+    this._cacheService = cacheService;
   }
 
   async addAlbum({ name, year }) {
@@ -26,12 +27,25 @@ class AlbumsService {
       throw new InvariantError('Album gagal ditambahkan');
     }
 
+    await this._cacheService.delete('albums');
     return result.rows[0].id;
   }
 
   async getAlbums() {
-    const result = await this._pool.query('SELECT * FROM albums');
-    return result.rows.map(mapDBToModel);
+    try {
+      const result = await this._cacheService.get('albums');
+
+      return JSON.parse(result);
+    } catch (error) {
+      const result = await this._pool.query('SELECT * FROM albums');
+
+      await this._cacheService.set(
+        'albums',
+        JSON.stringify(result.rows.map(mapDBToModel)),
+      );
+
+      return result.rows.map(mapDBToModel);
+    }
   }
 
   async getAlbumById(id) {
@@ -106,6 +120,8 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Gagal memperbarui album. Id tidak ditemukan');
     }
+
+    await this._cacheService.delete('albums');
   }
 
   async editCoverUrlAlbumById(id, coverUrl) {
@@ -121,6 +137,8 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Gagal memperbarui cover album. Id tidak ditemukan');
     }
+
+    await this._cacheService.delete('albums');
   }
 
   async deleteAlbumById(id) {
@@ -134,6 +152,8 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Album gagal dihapus. Id tidak ditemukan');
     }
+
+    await this._cacheService.delete('albums');
   }
 }
 
