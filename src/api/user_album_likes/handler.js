@@ -6,6 +6,7 @@ class UserAlbumLikesHandler {
     this._albumsService = albumsService;
 
     this.postUserAlbumLikeHandler = this.postUserAlbumLikeHandler.bind(this);
+    this.getAlbumLikeCountHandler = this.getAlbumLikeCountHandler.bind(this);
   }
 
   async postUserAlbumLikeHandler(request, h) {
@@ -24,7 +25,7 @@ class UserAlbumLikesHandler {
 
     if (existsUserAlbumLike) {
       await this._userAlbumLikesService.deleteUserAlbumLike(userId, albumId);
-      message = 'Berhasil tidak menyukai album';
+      message = 'Berhasil batal menyukai album';
     } else {
       await this._userAlbumLikesService.addUserAlbumLike(userId, albumId);
     }
@@ -35,6 +36,19 @@ class UserAlbumLikesHandler {
     });
     response.code(201);
     return response;
+  }
+
+  async getAlbumLikeCountHandler(request) {
+    const { albumId } = request.params;
+
+    const likes = await this._userAlbumLikesService.getCountAlbumLike(albumId);
+
+    return {
+      status: 'success',
+      data: {
+        likes,
+      },
+    };
   }
 }
 

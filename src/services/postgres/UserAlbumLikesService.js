@@ -54,6 +54,17 @@ class UserAlbumLikesService {
       throw new NotFoundError('Gagal menghapus like pada album');
     }
   }
+
+  async getCountAlbumLike(albumId) {
+    const query = {
+      text: 'SELECT COUNT(user_id) as likes FROM user_album_likes WHERE album_id = $1',
+      values: [albumId],
+    };
+
+    const result = await this._pool.query(query);
+
+    return Number(result.rows[0].likes);
+  }
 }
 
 module.exports = UserAlbumLikesService;

@@ -7,6 +7,11 @@ const routes = (handler) => [
       auth: 'openmusic_jwt',
     },
   },
+  {
+    method: 'GET',
+    path: '/albums/{albumId}/likes',
+    handler: handler.getAlbumLikeCountHandler,
+  },
 ];
 
 module.exports = routes;
