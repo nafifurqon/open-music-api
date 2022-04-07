@@ -63,7 +63,9 @@ class UserAlbumLikesService {
 
     const result = await this._pool.query(query);
 
-    return Number(result.rows[0].likes);
+    result.rows[0].likes = Number(result.rows[0].likes);
+
+    return result.rows[0];
   }
 }
 
