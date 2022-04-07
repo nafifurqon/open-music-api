@@ -57,21 +57,40 @@ class AlbumsService {
       throw new NotFoundError('Album tidak ditemukan');
     }
 
-    const mappedResult = {
-      id: result.rows[0].id,
-      name: result.rows[0].name,
-      year: result.rows[0].year,
-    };
-
     if (songs.length > 0) {
-      mappedResult.songs = result.rows.map((row) => ({
-        id: row.song_id,
-        title: row.title,
-        performer: row.performer,
-      }));
+      const mappedResult = {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        year: result.rows[0].year,
+      };
+
+      if (songs.length > 0) {
+        mappedResult.songs = result.rows.map((row) => ({
+          id: row.song_id,
+          title: row.title,
+          performer: row.performer,
+        }));
+      }
+
+      return mappedResult;
     }
 
-    return mappedResult;
+    return result.rows[0];
+  }
+
+  async checkExistsAlbum(id) {
+    const query = {
+      text: 'SELECT 1 FROM albums WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      return false;
+    }
+
+    return true;
   }
 
   async editAlbumById(id, { name, year }) {
@@ -86,6 +105,21 @@ class AlbumsService {
 
     if (!result.rowCount) {
       throw new NotFoundError('Gagal memperbarui album. Id tidak ditemukan');
+    }
+  }
+
+  async editCoverUrlAlbumById(id, coverUrl) {
+    const updatedAt = new Date().toISOString();
+    const query = {
+      text: 'UPDATE albums SET "coverUrl" = $1, '
+      + 'updated_at = $2 WHERE id = $3 RETURNING id',
+      values: [coverUrl, updatedAt, id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Gagal memperbarui cover album. Id tidak ditemukan');
     }
   }
 

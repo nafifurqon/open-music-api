@@ -1,13 +1,18 @@
+const NotFoundError = require('../../exceptions/NotFoundError');
+
 class AlbumsHandler {
-  constructor(service, validator) {
+  constructor(service, validator, storageService, uploadsValidator) {
     this._service = service;
     this._validator = validator;
+    this._storageService = storageService;
+    this._uploadsValidator = uploadsValidator;
 
     this.postAlbumHandler = this.postAlbumHandler.bind(this);
     this.getAlbumsHandler = this.getAlbumsHandler.bind(this);
     this.getAlbumByIdHandler = this.getAlbumByIdHandler.bind(this);
     this.putAlbumByIdHandler = this.putAlbumByIdHandler.bind(this);
     this.deleteAlbumByIdHandler = this.deleteAlbumByIdHandler.bind(this);
+    this.postAlbumCoverHandler = this.postAlbumCoverHandler.bind(this);
   }
 
   async postAlbumHandler(request, h) {
@@ -72,6 +77,28 @@ class AlbumsHandler {
       status: 'success',
       message: 'Album berhasil dihapus',
     };
+  }
+
+  async postAlbumCoverHandler(request, h) {
+    const { cover } = request.payload;
+    this._uploadsValidator.validateImageHeaders(cover.hapi.headers);
+
+    const { id } = request.params;
+    const existsAlbum = await this._service.checkExistsAlbum(id);
+    if (!existsAlbum) {
+      throw new NotFoundError('Album tidak ditemukan');
+    }
+
+    const fileLocation = await this._storageService.writeFile(cover, cover.hapi);
+
+    await this._service.editCoverUrlAlbumById(id, fileLocation);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Sampul berhasil diunggah',
+    });
+    response.code(201);
+    return response;
   }
 }
 
