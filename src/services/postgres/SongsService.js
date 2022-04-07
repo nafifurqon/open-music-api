@@ -5,8 +5,9 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
 
 class SongsService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async addSong({
@@ -25,6 +26,10 @@ class SongsService {
 
     if (!result.rows[0].id) {
       throw new InvariantError('Lagu gagal ditambahkan');
+    }
+
+    if (albumId) {
+      await this._cacheService.delete(`album:${albumId}`);
     }
 
     return result.rows[0].id;
@@ -84,14 +89,14 @@ class SongsService {
     const queryWithAlbumId = {
       text: 'UPDATE songs SET title = $1, year = $2, genre = $3, '
       + 'performer = $4, duration = $5, albumid = $6, updated_at = $7 '
-      + 'WHERE id = $8 RETURNING id',
+      + 'WHERE id = $8 RETURNING id, albumid',
       values: [title, year, genre, performer, duration, albumId, updatedAt, id],
     };
 
     const queryWithoutAlbumId = {
       text: 'UPDATE songs SET title = $1, year = $2, genre = $3, '
       + 'performer = $4, duration = $5, updated_at = $6 '
-      + 'WHERE id = $7 RETURNING id',
+      + 'WHERE id = $7 RETURNING id, albumid',
       values: [title, year, genre, performer, duration, updatedAt, id],
     };
 
@@ -102,11 +107,14 @@ class SongsService {
     if (!result.rowCount) {
       throw new NotFoundError('Gagal memperbarui lagu. Id tidak ditemukan');
     }
+
+    const { albumid } = result.rows[0];
+    await this._cacheService.delete(`album:${albumid}`);
   }
 
   async deleteSongById(id) {
     const query = {
-      text: 'DELETE FROM songs WHERE id = $1 RETURNING id',
+      text: 'DELETE FROM songs WHERE id = $1 RETURNING id, albumid',
       values: [id],
     };
 
@@ -115,6 +123,9 @@ class SongsService {
     if (!result.rowCount) {
       throw new NotFoundError('Lagu gagal dihapus. Id tidak ditemukan');
     }
+
+    const { albumid } = result.rows[0];
+    await this._cacheService.delete(`album:${albumid}`);
   }
 }
 
