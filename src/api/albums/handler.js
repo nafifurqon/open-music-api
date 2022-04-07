@@ -84,7 +84,7 @@ class AlbumsHandler {
     this._uploadsValidator.validateImageHeaders(cover.hapi.headers);
 
     const { id } = request.params;
-    const existsAlbum = await this._service.checkExistsAlbum(id);
+    const existsAlbum = await this._service.existsAlbum(id);
     if (!existsAlbum) {
       throw new NotFoundError('Album tidak ditemukan');
     }

@@ -78,7 +78,7 @@ class AlbumsService {
     return result.rows[0];
   }
 
-  async checkExistsAlbum(id) {
+  async existsAlbum(id) {
     const query = {
       text: 'SELECT 1 FROM albums WHERE id = $1',
       values: [id],
