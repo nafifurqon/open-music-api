@@ -5,9 +5,10 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBToModel } = require('../../utils');
 
 class AlbumsService {
-  constructor(songsService) {
+  constructor(songsService, cacheService) {
     this._pool = new Pool();
     this._songsService = songsService;
+    this._cacheService = cacheService;
   }
 
   async addAlbum({ name, year }) {
@@ -26,56 +27,85 @@ class AlbumsService {
       throw new InvariantError('Album gagal ditambahkan');
     }
 
+    await this._cacheService.delete('albums');
     return result.rows[0].id;
   }
 
   async getAlbums() {
-    const result = await this._pool.query('SELECT * FROM albums');
-    return result.rows.map(mapDBToModel);
+    try {
+      const result = await this._cacheService.get('albums');
+
+      return JSON.parse(result);
+    } catch (error) {
+      const result = await this._pool.query('SELECT * FROM albums');
+
+      await this._cacheService.set(
+        'albums',
+        JSON.stringify(result.rows.map(mapDBToModel)),
+      );
+
+      return result.rows.map(mapDBToModel);
+    }
   }
 
   async getAlbumById(id) {
-    const songs = await this._songsService.getSongs({ albumId: id });
+    try {
+      const result = await this._cacheService.get(`album:${id}`);
 
-    const queryNotJoinSong = {
-      text: 'SELECT * FROM albums WHERE id = $1',
-      values: [id],
-    };
+      return JSON.parse(result);
+    } catch (error) {
+      const songs = await this._songsService.getSongs({ albumId: id });
 
-    const queryJoinSong = {
-      text: 'SELECT a.id, a.name, a.year, s.id as song_id, s.title, s.performer FROM albums as a '
-      + 'JOIN songs as s on s.albumid = a.id '
-      + 'WHERE a.id = $1',
-      values: [id],
-    };
-
-    const query = songs.length > 0 ? queryJoinSong : queryNotJoinSong;
-
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Album tidak ditemukan');
-    }
-
-    if (songs.length > 0) {
-      const mappedResult = {
-        id: result.rows[0].id,
-        name: result.rows[0].name,
-        year: result.rows[0].year,
+      const queryNotJoinSong = {
+        text: 'SELECT * FROM albums WHERE id = $1',
+        values: [id],
       };
 
-      if (songs.length > 0) {
-        mappedResult.songs = result.rows.map((row) => ({
-          id: row.song_id,
-          title: row.title,
-          performer: row.performer,
-        }));
+      const queryJoinSong = {
+        text: 'SELECT a.id, a.name, a.year, s.id as song_id, s.title, s.performer FROM albums as a '
+        + 'JOIN songs as s on s.albumid = a.id '
+        + 'WHERE a.id = $1',
+        values: [id],
+      };
+
+      const query = songs.length > 0 ? queryJoinSong : queryNotJoinSong;
+
+      const result = await this._pool.query(query);
+
+      if (!result.rowCount) {
+        throw new NotFoundError('Album tidak ditemukan');
       }
 
-      return mappedResult;
-    }
+      if (songs.length > 0) {
+        const mappedResult = {
+          id: result.rows[0].id,
+          name: result.rows[0].name,
+          year: result.rows[0].year,
+        };
 
-    return result.rows[0];
+        if (songs.length > 0) {
+          mappedResult.songs = result.rows.map((row) => ({
+            id: row.song_id,
+            title: row.title,
+            performer: row.performer,
+          }));
+        }
+
+        await this._cacheService.set(
+          `album:${id}`,
+          JSON.stringify(mappedResult),
+        );
+
+        return mappedResult;
+      }
+
+      await this._cacheService.set(
+        `album:${id}`,
+        JSON.stringify(result.rows[0]),
+      );
+
+      return result.rows[0];
+    }
   }
 
   async existsAlbum(id) {
@@ -106,6 +136,9 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Gagal memperbarui album. Id tidak ditemukan');
     }
+
+    await this._cacheService.delete(`album:${id}`);
+    await this._cacheService.delete('albums');
   }
 
   async editCoverUrlAlbumById(id, coverUrl) {
@@ -121,6 +154,9 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Gagal memperbarui cover album. Id tidak ditemukan');
     }
+
+    await this._cacheService.delete(`album:${id}`);
+    await this._cacheService.delete('albums');
   }
 
   async deleteAlbumById(id) {
@@ -134,6 +170,9 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Album gagal dihapus. Id tidak ditemukan');
     }
+
+    await this._cacheService.delete(`album:${id}`);
+    await this._cacheService.delete('albums');
   }
 }
 

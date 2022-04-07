@@ -1,9 +1,10 @@
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class UserAlbumLikesHandler {
-  constructor(userAlbumLikesService, albumsService) {
+  constructor(userAlbumLikesService, albumsService, cacheService) {
     this._userAlbumLikesService = userAlbumLikesService;
     this._albumsService = albumsService;
+    this._cacheService = cacheService;
 
     this.postUserAlbumLikeHandler = this.postUserAlbumLikeHandler.bind(this);
     this.getAlbumLikeCountHandler = this.getAlbumLikeCountHandler.bind(this);
@@ -30,6 +31,8 @@ class UserAlbumLikesHandler {
       await this._userAlbumLikesService.addUserAlbumLike(userId, albumId);
     }
 
+    await this._cacheService.delete(`album-likes:${albumId}`);
+
     const response = h.response({
       status: 'success',
       message,
@@ -38,17 +41,33 @@ class UserAlbumLikesHandler {
     return response;
   }
 
-  async getAlbumLikeCountHandler(request) {
+  async getAlbumLikeCountHandler(request, h) {
     const { albumId } = request.params;
 
-    const likes = await this._userAlbumLikesService.getCountAlbumLike(albumId);
+    try {
+      const result = await this._cacheService.get(`album-likes:${albumId}`);
 
-    return {
-      status: 'success',
-      data: {
-        likes,
-      },
-    };
+      const response = h.response({
+        status: 'success',
+        data: JSON.parse(result),
+      });
+      response.header('X-Data-Source', 'cache');
+
+      return response;
+    } catch (error) {
+      const likes = await this._userAlbumLikesService.getCountAlbumLike(albumId);
+
+      await this._cacheService.set(
+        `album-likes:${albumId}`,
+        JSON.stringify(likes),
+        1800,
+      );
+
+      return {
+        status: 'success',
+        data: likes,
+      };
+    }
   }
 }
 
