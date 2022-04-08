@@ -46,10 +46,13 @@ class PlaylistsService {
   }
 
   async getPlaylistInfo(playlistId, owner) {
-    const query = 'SELECT p.id, p.name, u.username FROM playlists as p '
-    + 'INNER JOIN users as u ON u.id = p.owner '
-    + 'LEFT JOIN collaborations as c ON c.playlist_id = p.id '
-    + `WHERE p.id = '${playlistId}' and (p.owner = '${owner}' OR c.user_id = '${owner}')`;
+    const query = {
+      text: 'SELECT p.id, p.name, u.username FROM playlists as p '
+      + 'INNER JOIN users as u ON u.id = p.owner '
+      + 'LEFT JOIN collaborations as c ON c.playlist_id = p.id '
+      + 'WHERE p.id = $1 and (p.owner = $2 OR c.user_id = $2)',
+      values: [playlistId, owner],
+    };
 
     const result = await this._pool.query(query);
 

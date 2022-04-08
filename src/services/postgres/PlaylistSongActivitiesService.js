@@ -30,11 +30,14 @@ class PlaylistSongActivities {
   }
 
   async getPlaylistSongActivities(playlistId) {
-    const query = 'SELECT psa.playlist_id, u.username, s.title, psa.action, psa.time from playlist_song_activities as psa '
-    + 'INNER JOIN users as u ON u.id = psa.user_id '
-    + 'INNER JOIN songs as s ON s.id = psa.song_id '
-    + `WHERE psa.playlist_id = '${playlistId}' `
-    + 'ORDER BY psa.time ASC';
+    const query = {
+      text: 'SELECT psa.playlist_id, u.username, s.title, psa.action, psa.time from playlist_song_activities as psa '
+      + 'INNER JOIN users as u ON u.id = psa.user_id '
+      + 'INNER JOIN songs as s ON s.id = psa.song_id '
+      + 'WHERE psa.playlist_id = $1 '
+      + 'ORDER BY psa.time ASC',
+      values: [playlistId],
+    };
 
     const result = await this._pool.query(query);
 
