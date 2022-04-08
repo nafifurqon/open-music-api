@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
@@ -56,19 +57,10 @@ class AlbumsService {
     } catch (error) {
       const songs = await this._songsService.getSongs({ albumId: id });
 
-      const queryNotJoinSong = {
-        text: 'SELECT * FROM albums WHERE id = $1',
+      const query = {
+        text: 'SELECT id, name, year FROM albums WHERE id = $1',
         values: [id],
       };
-
-      const queryJoinSong = {
-        text: 'SELECT a.id, a.name, a.year, s.id as song_id, s.title, s.performer FROM albums as a '
-        + 'JOIN songs as s on s.albumid = a.id '
-        + 'WHERE a.id = $1',
-        values: [id],
-      };
-
-      const query = songs.length > 0 ? queryJoinSong : queryNotJoinSong;
 
       const result = await this._pool.query(query);
 
@@ -76,35 +68,17 @@ class AlbumsService {
         throw new NotFoundError('Album tidak ditemukan');
       }
 
-      if (songs.length > 0) {
-        const mappedResult = {
-          id: result.rows[0].id,
-          name: result.rows[0].name,
-          year: result.rows[0].year,
-        };
-
-        if (songs.length > 0) {
-          mappedResult.songs = result.rows.map((row) => ({
-            id: row.song_id,
-            title: row.title,
-            performer: row.performer,
-          }));
-        }
-
-        await this._cacheService.set(
-          `album:${id}`,
-          JSON.stringify(mappedResult),
-        );
-
-        return mappedResult;
-      }
+      const mappedResult = {
+        ...result.rows[0],
+        songs,
+      };
 
       await this._cacheService.set(
         `album:${id}`,
-        JSON.stringify(result.rows[0]),
+        JSON.stringify(mappedResult),
       );
 
-      return result.rows[0];
+      return mappedResult;
     }
   }
 
